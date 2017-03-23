@@ -1,6 +1,6 @@
 # cse-utils
 
-`cse` is a bash script.  All other files just stores strings to be read by `cse`, for string-matching html responses.  
+`cse` is a bash script.  All other files just store strings to be read by `cse`, for string-matching html responses.  
 
 ```
 Usage:
