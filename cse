@@ -104,7 +104,7 @@ usage () {
     echo -e "\tssh to ${user}@linux1"
 
     echo 'cse ssh <command>'
-    echo -e '\tExecute <command> on ${user}@linux1'
+    echo -e "\tExecute <command> on ${user}@linux1"
 
     echo 'cse www <file>'
     echo -e "\tUpload <file> to ${user}@linux1:~/www/ and enable read"
