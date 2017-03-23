@@ -92,10 +92,10 @@ usage () {
     echo 'Usage:'
 
     echo 'cse get <file>'
-    echo -e '\tDownload <file> from home folder'
+    echo -e "\tDownload ${user}@linux1:~/<file>"
 
     echo 'cse put <file>'
-    echo -e '\tUpload <file> to home folder'
+    echo -e "\tUpload ${user}@linux1:~/<file>"
 
     echo 'cse print ps2 <file>'
     echo -e "\tPrint ${user}@linux1:~/<file> on ps2 printer"
