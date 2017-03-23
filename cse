@@ -1,0 +1,171 @@
+#!/usr/local/bin/bash
+# -*- mode: sh-mode -*-
+
+# config
+user=cylau5
+
+# main
+linux1=${user}@linux1.cse.cuhk.edu.hk
+
+vpn () {
+    case $1 in
+	'')
+	    networksetup -showpppoestatus "CSE VPN";;
+	off)
+	    networksetup -disconnectpppoeservice "CSE VPN";;
+	on)
+	    networksetup -connectpppoeservice "CSE VPN"
+	    echo connecting...
+	    while true; do
+		status=$(networksetup -showpppoestatus "CSE VPN")
+		if [ "$status" == connected ]; then
+		    break
+		fi
+		sleep 1
+	    done
+	    echo connected;;
+	*)
+	    echo pardon?;;
+    esac
+}
+
+wifi () {
+    case $1 in
+	'')
+	    networksetup -getairportpower en0
+	    networksetup -getairportnetwork en0;;
+	off)
+	    networksetup -setairportpower en0 off;;
+	on)
+	    networksetup -setairportpower en0 on;;
+	erg|ergwave|ergwave3)
+	    echo connecting to ERGWAVE3...
+	    networksetup -setairportnetwork en0 ERGWAVE3 'ergcuhkwlan!@';;
+	uni|university|universities)
+	    echo connecting to Universities WiFi...
+	    networksetup -setairportnetwork en0 'Universities WiFi';;
+	*)
+	    echo connecting to $1...
+	    networksetup -setairportnetwork en0 $@;;
+    esac
+}
+
+ergwave () {
+    case $1 in
+	out)
+	    url="http://securelogin.arubanetworks.com/auth/logout.html?logout=Logout"
+	    html=$(curl -s $url)
+	    case "$html" in
+		"$(< $(dirname $0)/ergwave_out_ok)")
+		    echo "ok";;
+		"$(< $(dirname $0)/ergwave_out_already)")
+		    echo "already logged out";;
+		'')
+		    echo "nothing";;
+		*)
+		    echo "Unknown error:"
+		    echo "$html";;
+	    esac;;
+	'')
+	    echo "User: ${user}"
+	    read -s -p "Password: " password
+	    data="user=${user}&password=$password&fqdn=CSE&cmd=authenticate&Login=Log+In"
+	    url="http://securelogin.arubanetworks.com/cgi-bin/login"
+	    html=$(curl -s --data $data $url)
+	    case "$html" in
+		"$(< $(dirname $0)/ergwave_ok)")
+		    echo "ok";;
+		"$(< $(dirname $0)/ergwave_wrong)")
+		    echo "wrong password";;
+		'')
+		    echo "nothing";;
+		*)
+		    echo 'Unknown error:'
+		    echo "$html";;
+	    esac;;
+	*)
+	    echo pardon?;;
+    esac
+}
+
+usage () {
+    echo 'Usage:'
+
+    echo 'cse get <file>'
+    echo -e '\tDownload <file> from home folder'
+
+    echo 'cse put <file>'
+    echo -e '\tUpload <file> to home folder'
+
+    echo 'cse print ps2 <file>'
+    echo -e "\tPrint ${user}@linux1:~/<file> on ps2 printer"
+
+    echo 'cse ssh'
+    echo -e "\tssh to ${user}@linux1"
+
+    echo 'cse ssh <command>'
+    echo -e '\tExecute <command> on ${user}@linux1'
+
+    echo 'cse www <file>'
+    echo -e "\tUpload <file> to ${user}@linux1:~/www/ and enable read"
+    echo -e '\tYou can then visit the file on:'
+    echo -e "\thttp://appsrv.cse.cuhk.edu.hk/~${user}/<file>"
+
+    echo 'cse vpn'
+    echo -e '\tShow cse vpn status (on Mac)'
+    echo -e '\tYou should have already setup the VPN as "CSE VPN"'
+
+    echo 'cse vpn on'
+    echo -e '\tConnect cse vpn (on Mac)'
+
+    echo 'cse vpn off'
+    echo -e '\tDisconnect cse vpn (on Mac)'
+
+    echo 'cse wifi'
+    echo -e '\tShow wifi status (on Mac)'
+
+    echo 'cse wifi on'
+    echo -e '\tTurn on wifi (on Mac)'
+
+    echo 'cse wifi off'
+    echo -e '\tTurn off wifi (on Mac)'
+
+    echo 'cse wifi erg'
+    echo -e '\tConnect to ERGWAVE3 (on Mac)'
+
+    echo 'cse wifi uni'
+    echo -e '\tConnect to University WiFi (on Mac)'
+
+    echo 'cse ergwave'
+    echo -e '\tLogin ERGWAVE3 (on Mac)'
+
+    echo 'cse ergwave out'
+    echo -e '\tLogout ERGWAVE3 (on Mac)'
+}
+
+cmd=$1
+shift
+
+case $cmd in
+    get)
+	scp $linux1:$1 .;;
+    put)
+	scp $1 $linux1:;;
+    ssh)
+	ssh $linux1 $1;;
+    www)
+	scp $1 $linux1:~/www/
+	ssh $linux1 "chmod a+r www/$1";;
+    print)
+	ssh $linux1 "lpr -P$1 $2";;
+    vpn)
+	vpn $@;;
+    wifi)
+	wifi $@;;
+    ergwave)
+	ergwave $@;;
+    merge)
+	gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=$@;;
+    *)
+	usage;;
+esac
